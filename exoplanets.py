@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.25.0"
+__generated_with = "0.25.1"
 app = marimo.App(width="medium", auto_download=["html"])
 
 
@@ -468,7 +468,9 @@ def _(df_clean_rade, df_default, df_mr, plt, sns):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    We can see that the orbital period isn't the reason. There is no relation between the orbital period and the radius of exoxplanets.
+    We can see that the orbital period isn't the reason. There is no relation between the orbital period and the radius of exoxplanets. This graph doesn't tell anything that we didn't know, we just showed that 2 variables we played with earlier were independant.
+
+    With online researches it is explained by the [italian national institute of astronomy](http://www.inaf.it/en/inaf-news/billions-of-rocky-planets-in-the-habitable-zones-around-red-dwarfs) that Super-Earth are very common. The article tells that around red dwarfs, a type of star, it's common to find rocky, thus Super-Earth exoplanets. With this, we know red dwarfs are most likely to have Super-Earth orbiting exoplanets, this could potentially implies that there can be a pattern of exoplanets around specific type of stars.
     """)
     return
 
