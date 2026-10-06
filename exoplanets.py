@@ -470,7 +470,9 @@ def _(mo):
     mo.md(r"""
     We can see that the orbital period isn't the reason. There is no relation between the orbital period and the radius of exoxplanets. This graph doesn't tell anything that we didn't know, we just showed that 2 variables we played with earlier were independant.
 
-    With online researches it is explained by the [italian national institute of astronomy](http://www.inaf.it/en/inaf-news/billions-of-rocky-planets-in-the-habitable-zones-around-red-dwarfs) that Super-Earth are very common. The article tells that around red dwarfs, a type of star, it's common to find rocky, thus Super-Earth exoplanets. With this, we know red dwarfs are most likely to have Super-Earth orbiting exoplanets, this could potentially implies that there can be a pattern of exoplanets around specific type of stars.
+    With online researches it is explained by the [italian national institute of astronomy](http://www.inaf.it/en/inaf-news/billions-of-rocky-planets-in-the-habitable-zones-around-red-dwarfs) that Super-Earth are very common. The article tells that around red dwarfs, a type of star, it's common to find rocky, thus Super-Earth exoplanets. This information allows us to move on from the Transit method and exoplanets radius correlation problem and focus onto another problematic, the correlation between exoplanets and their host star. This allows us to move on from the transit method and the radius un-correlation because since Super-Earth are most common and because of MNAR data, we will eventually find more Super-Earth exoplanets than Gas-Giants.
+
+    From the article we can suppose that an exoplanet's parameter can be determined, guessed from its host star parameters. This problematic will be the subject of this study but before diving directly to this, we must understand the remaining planets parameters.
     """)
     return
 
