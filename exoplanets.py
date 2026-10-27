@@ -488,11 +488,62 @@ def _(df_clean_rade, df_default, df_mr, plt, sns):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    We can see that the orbital period isn't the reason. There is no relation between the orbital period and the radius of exoxplanets. This graph doesn't tell anything that we didn't know, we just showed that 2 variables we played with earlier were independant.
+    willWe can see that the orbital period isn't the reason. There is no relation between the orbital period and the radius of exoxplanets. This graph doesn't tell anything that we didn't know, we just showed that 2 variables we played with earlier were independant.
 
     With online researches it is explained by the [italian national institute of astronomy](http://www.inaf.it/en/inaf-news/billions-of-rocky-planets-in-the-habitable-zones-around-red-dwarfs) that Super-Earth are very common. The article tells that around red dwarfs, a type of star, it's common to find rocky, thus Super-Earth exoplanets. This information allows us to move on from the Transit method and exoplanets radius correlation problem and focus onto another problematic, the correlation between exoplanets and their host star. This allows us to move on from the transit method and the radius un-correlation because since Super-Earth are most common and because of MNAR data, we will eventually find more Super-Earth exoplanets than Gas-Giants.
 
     From the article we can suppose that an exoplanet's parameter can be determined, guessed from its host star parameters. This problematic will be the subject of this study but before diving directly to this, we must understand the remaining planets parameters.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The dataset contains various exoplanet's parameters, in addition to the orbital period, mass and radius some other paramters are useful for the project such as the eccentricity, the orbital semi-major axis, etc. The dataset also provides some data that we won't use for this work such as radial velocity magnitude and other method's related fields since the research focuses on extrasolar planet's parameters given star's ones.
+
+    The exoplanet's paramters that are, at first sight, meaningful to study before applying are:
+    1. The orbital period: Time of orbit around the host star
+    2. The mass
+    3. The radius
+    4. The eccentricity: Tells how much the orbit deviates from a perfect circle
+    5. The Orbital semi-major axis: Half the length of the longest orbital ellipse axis
+    6. The Epoch of Periastron: The exact time or date when the exoplanet reach the closest point to its host star (Useful to predict the planet position at a specific date)
+    7. The inclination: The angle between the host star orbit plan and a reference plan, perpendicular to the earth sight
+    8. The true obliquity: Also named axis tilt, is the angle between its rotational axis and its orbital axis
+    9. The equilibrium temperature: The thoerical temperature if it was a black body heated only by its parent star
+    10. Angular separation: The angular separation between the planet and the star
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    About stellar parameters, the retained ones are the following:
+    1. The spectral type: Star classification
+    2. Effective temperature: The temperature of a theorical black body of the same size emitting the same amount of radiant energy
+    3. The radius
+    4. The mass
+    5. The metallicity: The metal content of the photosphere compared to the Hydrogen content
+    6. The luminosity: Amount of energy emitted
+    7. Surface gravity
+    8. Age
+    9. Rotational velocity / period: Period for the host star to complete a full rotation at a given speed
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    And for the system parameters the one retained are:
+    1. Number of orbiting planets
+    2. Number of stars
+    3. Number of moons
+    4. Total proper motion: Angular speed of the center of mass at the center of gravity of the system
+    5. Distance: Distance of the system from the solar system
+    6. Parallax: Angle of the star from earth's orbit
     """)
     return
 
