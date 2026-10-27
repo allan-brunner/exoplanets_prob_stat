@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.25.1"
+__generated_with = "0.25.2"
 app = marimo.App(width="medium", auto_download=["html"])
 
 
@@ -36,8 +36,28 @@ def _():
 @app.cell
 def _(pd):
     # Load dataset
-    df = pd.read_csv("./project/exoplanetes_data.csv", skiprows=292, low_memory=False)
+    df = pd.read_csv("./exoplanetes_data.csv", skiprows=292, low_memory=False)
     return (df,)
+
+
+@app.cell
+def _(plt, sns):
+    # Mathplotlib and seaborn dark theme setup
+    plt.style.use('dark_background')
+
+    custom_params = {
+        "figure.facecolor": "black",
+        "axes.facecolor": "#1c1c1c",
+        "axes.edgecolor": "#333333",
+        "grid.color": "#333333",
+        "text.color": "white",
+        "axes.labelcolor": "white",
+        "xtick.color": "white",
+        "ytick.color": "white"
+    }
+
+    sns.set_theme(style="darkgrid", rc=custom_params)
+    return
 
 
 @app.cell(hide_code=True)
@@ -421,7 +441,7 @@ def _(df_default, plt, sns):
         x="pl_masse",
         y="pl_rade",
         hue="discoverymethod",
-        alpha=0.25,
+        alpha=0.2,
     )
     plt.xscale("log")
     plt.yscale("log")
