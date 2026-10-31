@@ -508,7 +508,7 @@ def _(mo):
     3. The radius
     4. The eccentricity: Tells how much the orbit deviates from a perfect circle
     5. The Orbital semi-major axis: Half the length of the longest orbital ellipse axis
-    6. The Epoch of Periastron: The exact time or date when the exoplanet reach the closest point to its host star (Useful to predict the planet position at a specific date)
+    6. The Argument of periastron: The angular separation between the orbit's ascending node and periastron
     7. The inclination: The angle between the host star orbit plan and a reference plan, perpendicular to the earth sight
     8. The true obliquity: Also named axis tilt, is the angle between its rotational axis and its orbital axis
     9. The equilibrium temperature: The thoerical temperature if it was a black body heated only by its parent star
