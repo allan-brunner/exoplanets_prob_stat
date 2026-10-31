@@ -548,5 +548,60 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Continuing with exoplanet's parameters, we already went over orbital period, mass and radius. We've also seen that MNAR data was leading to unlogical graphs if not intepreted taking in account the MNAR data. It will be important to study if data should be merged from not default rows or being interpolated, predicted using ML. Let's continue with the rest of the paramters and their correlation with the discovery method to understand better the MNAR data, starting with eccentricity.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    We can plot the eccentricity and the semi-major axis in a same KDE joint plot and have a grasp about those 2 parameters in the same graph.
+    """)
+    return
+
+
+@app.cell
+def _(df_methods, plt, sns):
+    df_orbsmax = df_methods.dropna(subset=['pl_orbsmax'])
+    df_clean = df_methods.dropna(subset=['pl_orbsmax', 'pl_orbeccen'])
+
+    g = sns.jointplot(
+        data=df_clean,
+        x='pl_orbsmax',
+        y='pl_orbeccen',
+        hue='discoverymethod',
+        kind='kde',
+        fill=True,
+        alpha=0.65,
+        log_scale=(True, False),
+    )
+
+    g.ax_joint.set_xlabel('Orbital Semi-Major Axis [AU]')
+    g.ax_joint.set_ylabel('Orbital Eccentricity')
+    g.ax_joint.set_ylim(0, 1.0)
+
+    g.ax_marg_x.set_title('Eccentricity vs. Semi-Major Axis and marginal distributions')
+    plt.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The graph displays, on the X axis, the density of the orbital semi-major axis and on the Y-axis, the density of the orbital eccentricity. Putting the 2 values on a bivariate KDE plot, we can see a correlation between the 2 parameters.
+
+    What this graphs gives us, for the density curve, is that the Transit discovery method targets mainly small, lower to 1 AU orbital semi-major axis and specifically around 0.05 AU. When, on the other side, the radial velocity method curve has 2 small bumps, one tiny bump around 0.06-0.1 AU and another, slightly bigger around 1-2 AU but has more repartition of data than the Transit discovery method.
+
+    For the orbital eccentricity density we can see that the transit method nearly has all its value near 0 ($e \equiv 0$) when radial velocity discovery method is targets slightly more eccentric orbits ($e \equiv 0.15$) and has more repartition of its data.
+
+    The second graph, that shows the correlation between the eccentricity and the semi-major axis tells us that the closest a planet is to its star, the more its orbit looks like a perfect circle, it's eccentricity is near 0. As the semi-major axis increases, exoplanets orbits are also impacted by other objects such as other exoplanets from the same solar system making eccentricity rise up to 0.85.
+    """)
+    return
+
+
 if __name__ == "__main__":
     app.run()
