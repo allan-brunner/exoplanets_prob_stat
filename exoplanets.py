@@ -503,16 +503,13 @@ def _(mo):
     The dataset contains various exoplanet's parameters, in addition to the orbital period, mass and radius some other paramters are useful for the project such as the eccentricity, the orbital semi-major axis, etc. The dataset also provides some data that we won't use for this work such as radial velocity magnitude and other method's related fields since the research focuses on extrasolar planet's parameters given star's ones.
 
     The exoplanet's paramters that are, at first sight, meaningful to study before applying are:
-    1. The orbital period: Time of orbit around the host star
-    2. The mass
-    3. The radius
-    4. The eccentricity: Tells how much the orbit deviates from a perfect circle
-    5. The Orbital semi-major axis: Half the length of the longest orbital ellipse axis
-    6. The Argument of periastron: The angular separation between the orbit's ascending node and periastron
-    7. The inclination: The angle between the host star orbit plan and a reference plan, perpendicular to the earth sight
-    8. The true obliquity: Also named axis tilt, is the angle between its rotational axis and its orbital axis
-    9. The equilibrium temperature: The thoerical temperature if it was a black body heated only by its parent star
-    10. Angular separation: The angular separation between the planet and the star
+    1. **The orbital period:** Time of orbit around the host star
+    2. **The mass**
+    3. **The radius**
+    4. **The eccentricity:** Tells how much the orbit deviates from a perfect circle
+    5. **The Orbital semi-major axis:** Half the length of the longest orbital ellipse axis
+    6. **The true obliquity:** Also named axis tilt, is the angle between its rotational axis and its orbital axis
+    7. **The equilibrium temperature:** The thoerical temperature if it was a black body heated only by its parent star
     """)
     return
 
@@ -521,15 +518,15 @@ def _(mo):
 def _(mo):
     mo.md(r"""
     About stellar parameters, the retained ones are the following:
-    1. The spectral type: Star classification
-    2. Effective temperature: The temperature of a theorical black body of the same size emitting the same amount of radiant energy
-    3. The radius
-    4. The mass
-    5. The metallicity: The metal content of the photosphere compared to the Hydrogen content
-    6. The luminosity: Amount of energy emitted
-    7. Surface gravity
-    8. Age
-    9. Rotational velocity / period: Period for the host star to complete a full rotation at a given speed
+    1. **The spectral type:** Star classification
+    2. **Effective temperature:** The temperature of a theorical black body of the same size emitting the same amount of radiant energy
+    3. **The radius**
+    4. **The mass**
+    5. **The metallicity:** The metal content of the photosphere compared to the Hydrogen content
+    6. **The luminosity:** Amount of energy emitted
+    7. **Surface gravity**
+    8. **Age**
+    9. **Rotational velocity / period:** Period for the host star to complete a full rotation at a given speed
     """)
     return
 
@@ -538,12 +535,12 @@ def _(mo):
 def _(mo):
     mo.md(r"""
     And for the system parameters the one retained are:
-    1. Number of orbiting planets
-    2. Number of stars
-    3. Number of moons
-    4. Total proper motion: Angular speed of the center of mass at the center of gravity of the system
-    5. Distance: Distance of the system from the solar system
-    6. Parallax: Angle of the star from earth's orbit
+    1. **Number of orbiting planets**
+    2. **Number of stars**
+    3. **Number of moons**
+    4. **Total proper motion:** Angular speed of the center of mass at the center of gravity of the system
+    5. **Distance:** Distance of the system from the solar system
+    6. **Parallax:** Angle of the star from earth's orbit
     """)
     return
 
@@ -551,7 +548,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Continuing with exoplanet's parameters, we already went over orbital period, mass and radius. We've also seen that MNAR data was leading to unlogical graphs if not intepreted taking in account the MNAR data. It will be important to study if data should be merged from not default rows or being interpolated, predicted using ML. Let's continue with the rest of the paramters and their correlation with the discovery method to understand better the MNAR data, starting with eccentricity.
+    Continuing with exoplanet's parameters, we already went over orbital period, mass and radius. We've also seen that MNAR data was leading to unlogical graphs if not intepreted taking in account the MNAR data. It will be important to study if data should be merged from not default rows or being interpolated, predicted using Machine Learning (ML). Let's continue with the rest of the paramters and their correlation with the discovery method to understand better the MNAR data, starting with eccentricity.
     """)
     return
 
@@ -566,11 +563,10 @@ def _(mo):
 
 @app.cell
 def _(df_methods, plt, sns):
-    df_orbsmax = df_methods.dropna(subset=['pl_orbsmax'])
-    df_clean = df_methods.dropna(subset=['pl_orbsmax', 'pl_orbeccen'])
+    df_clean_orbsmax_orbeccen = df_methods.dropna(subset=['pl_orbsmax', 'pl_orbeccen'])
 
     g = sns.jointplot(
-        data=df_clean,
+        data=df_clean_orbsmax_orbeccen,
         x='pl_orbsmax',
         y='pl_orbeccen',
         hue='discoverymethod',
@@ -580,11 +576,11 @@ def _(df_methods, plt, sns):
         log_scale=(True, False),
     )
 
-    g.ax_joint.set_xlabel('Orbital Semi-Major Axis [AU]')
-    g.ax_joint.set_ylabel('Orbital Eccentricity')
+    g.ax_joint.set_xlabel(f'Orbital Semi-Major Axis [AU] (N = {len(df_methods.dropna(subset='pl_orbsmax'))})')
+    g.ax_joint.set_ylabel(f'Orbital Eccentricity (N = {len(df_methods.dropna(subset='pl_orbeccen'))})')
     g.ax_joint.set_ylim(0, 1.0)
 
-    g.ax_marg_x.set_title('Eccentricity vs. Semi-Major Axis and marginal distributions')
+    g.ax_marg_x.set_title(f'Eccentricity vs. Semi-Major Axis and marginal distributions (N = {len(df_clean_orbsmax_orbeccen)})')
     plt.show()
     return
 
