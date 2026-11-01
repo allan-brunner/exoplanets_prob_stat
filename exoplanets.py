@@ -508,7 +508,6 @@ def _(mo):
     3. **The radius**
     4. **The eccentricity:** Tells how much the orbit deviates from a perfect circle
     5. **The Orbital semi-major axis:** Half the length of the longest orbital ellipse axis
-    6. **The true obliquity:** Also named axis tilt, is the angle between its rotational axis and its orbital axis
     7. **The equilibrium temperature:** The thoerical temperature if it was a black body heated only by its parent star
     """)
     return
@@ -574,6 +573,7 @@ def _(df_methods, plt, sns):
         fill=True,
         alpha=0.65,
         log_scale=(True, False),
+        common_norm=False
     )
 
     g.ax_joint.set_xlabel(f'Orbital Semi-Major Axis [AU] (N = {len(df_methods.dropna(subset='pl_orbsmax'))})')
@@ -595,6 +595,50 @@ def _(mo):
     For the orbital eccentricity density we can see that the transit method nearly has all its value near 0 ($e \equiv 0$) when radial velocity discovery method is targets slightly more eccentric orbits ($e \equiv 0.15$) and has more repartition of its data.
 
     The second graph, that shows the correlation between the eccentricity and the semi-major axis tells us that the closest a planet is to its star, the more its orbit looks like a perfect circle, it's eccentricity is near 0. As the semi-major axis increases, exoplanets orbits are also impacted by other objects such as other exoplanets from the same solar system making eccentricity rise up to 0.85.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Finishing exoplanets parameters with the equilibrium temperature. This will have strong correlation with the star effective temperature parameter but could also hide some other information.
+    """)
+    return
+
+
+@app.cell
+def _(df_methods, plt, sns):
+    df_eqt = df_methods.dropna(subset=['pl_eqt'])
+
+    sns.kdeplot(df_eqt, x='pl_eqt', hue='discoverymethod', common_norm=False)
+    plt.title(f"Distribution of exoplanet equilibrium temperature (N = {len(df_eqt)})")
+    plt.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The graph shows that the radial velocity method tends to mainly target "low" temperature exoplanets, around 300° K with tiny bumps around 900° and 1200° K. And the Transit method shows only 2 distinct peaks around 750° K and 1500° K. Those 2 values standing out can maybe be linked to the exoplanets types that we discovered with exoplanets radii and masses.
+    """)
+    return
+
+
+@app.cell
+def _(df_methods, plt, sns):
+    df_clean_eqt_masse = df_methods.dropna(subset=['pl_eqt', 'pl_rade'])
+    sns.scatterplot(df_clean_eqt_masse, x='pl_eqt', y='pl_rade', alpha=0.1)
+    plt.title(f"Correlation between equilibrium temperature and radii (N = {len(df_clean_eqt_masse)})")
+    plt.xlabel(f"Equilibrium temperature [K]")
+    plt.ylabel(f"Radius [Earth Radius]")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Plotting the equilibrium temperatures along the exoplanets radius, we can see that the 2 exoplanets categories seems to also stand out, yet less distincitve but starting from a certiain radius, temperature seems to get bigger. We know that the radius nor mass has no direct impact on the equilibrium temperature but can reveals other correlation about density, composition of the exoplanets.
     """)
     return
 
