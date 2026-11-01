@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.25.1"
+__generated_with = "0.25.2"
 app = marimo.App(width="medium", auto_download=["html"])
 
 
@@ -36,8 +36,28 @@ def _():
 @app.cell
 def _(pd):
     # Load dataset
-    df = pd.read_csv("./project/exoplanetes_data.csv", skiprows=292, low_memory=False)
+    df = pd.read_csv("./exoplanetes_data.csv", skiprows=292, low_memory=False)
     return (df,)
+
+
+@app.cell
+def _(plt, sns):
+    # Mathplotlib and seaborn dark theme setup
+    plt.style.use('dark_background')
+
+    custom_params = {
+        "figure.facecolor": "black",
+        "axes.facecolor": "#1c1c1c",
+        "axes.edgecolor": "#333333",
+        "grid.color": "#333333",
+        "text.color": "white",
+        "axes.labelcolor": "white",
+        "xtick.color": "white",
+        "ytick.color": "white"
+    }
+
+    sns.set_theme(style="darkgrid", rc=custom_params)
+    return
 
 
 @app.cell(hide_code=True)
@@ -421,7 +441,7 @@ def _(df_default, plt, sns):
         x="pl_masse",
         y="pl_rade",
         hue="discoverymethod",
-        alpha=0.25,
+        alpha=0.2,
     )
     plt.xscale("log")
     plt.yscale("log")
@@ -468,11 +488,157 @@ def _(df_clean_rade, df_default, df_mr, plt, sns):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    We can see that the orbital period isn't the reason. There is no relation between the orbital period and the radius of exoxplanets. This graph doesn't tell anything that we didn't know, we just showed that 2 variables we played with earlier were independant.
+    willWe can see that the orbital period isn't the reason. There is no relation between the orbital period and the radius of exoxplanets. This graph doesn't tell anything that we didn't know, we just showed that 2 variables we played with earlier were independant.
 
     With online researches it is explained by the [italian national institute of astronomy](http://www.inaf.it/en/inaf-news/billions-of-rocky-planets-in-the-habitable-zones-around-red-dwarfs) that Super-Earth are very common. The article tells that around red dwarfs, a type of star, it's common to find rocky, thus Super-Earth exoplanets. This information allows us to move on from the Transit method and exoplanets radius correlation problem and focus onto another problematic, the correlation between exoplanets and their host star. This allows us to move on from the transit method and the radius un-correlation because since Super-Earth are most common and because of MNAR data, we will eventually find more Super-Earth exoplanets than Gas-Giants.
 
     From the article we can suppose that an exoplanet's parameter can be determined, guessed from its host star parameters. This problematic will be the subject of this study but before diving directly to this, we must understand the remaining planets parameters.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The dataset contains various exoplanet's parameters, in addition to the orbital period, mass and radius some other paramters are useful for the project such as the eccentricity, the orbital semi-major axis, etc. The dataset also provides some data that we won't use for this work such as radial velocity magnitude and other method's related fields since the research focuses on extrasolar planet's parameters given star's ones.
+
+    The exoplanet's paramters that are, at first sight, meaningful to study before applying are:
+    1. **The orbital period:** Time of orbit around the host star
+    2. **The mass**
+    3. **The radius**
+    4. **The eccentricity:** Tells how much the orbit deviates from a perfect circle
+    5. **The Orbital semi-major axis:** Half the length of the longest orbital ellipse axis
+    7. **The equilibrium temperature:** The thoerical temperature if it was a black body heated only by its parent star
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    About stellar parameters, the retained ones are the following:
+    1. **The spectral type:** Star classification
+    2. **Effective temperature:** The temperature of a theorical black body of the same size emitting the same amount of radiant energy
+    3. **The radius**
+    4. **The mass**
+    5. **The metallicity:** The metal content of the photosphere compared to the Hydrogen content
+    6. **The luminosity:** Amount of energy emitted
+    7. **Surface gravity**
+    8. **Age**
+    9. **Rotational velocity / period:** Period for the host star to complete a full rotation at a given speed
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    And for the system parameters the one retained are:
+    1. **Number of orbiting planets**
+    2. **Number of stars**
+    3. **Number of moons**
+    4. **Total proper motion:** Angular speed of the center of mass at the center of gravity of the system
+    5. **Distance:** Distance of the system from the solar system
+    6. **Parallax:** Angle of the star from earth's orbit
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Continuing with exoplanet's parameters, we already went over orbital period, mass and radius. We've also seen that MNAR data was leading to unlogical graphs if not intepreted taking in account the MNAR data. It will be important to study if data should be merged from not default rows or being interpolated, predicted using Machine Learning (ML). Let's continue with the rest of the paramters and their correlation with the discovery method to understand better the MNAR data, starting with eccentricity.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    We can plot the eccentricity and the semi-major axis in a same KDE joint plot and have a grasp about those 2 parameters in the same graph.
+    """)
+    return
+
+
+@app.cell
+def _(df_methods, plt, sns):
+    df_clean_orbsmax_orbeccen = df_methods.dropna(subset=['pl_orbsmax', 'pl_orbeccen'])
+
+    g = sns.jointplot(
+        data=df_clean_orbsmax_orbeccen,
+        x='pl_orbsmax',
+        y='pl_orbeccen',
+        hue='discoverymethod',
+        kind='kde',
+        fill=True,
+        alpha=0.65,
+        log_scale=(True, False),
+        common_norm=False
+    )
+
+    g.ax_joint.set_xlabel(f'Orbital Semi-Major Axis [AU] (N = {len(df_methods.dropna(subset='pl_orbsmax'))})')
+    g.ax_joint.set_ylabel(f'Orbital Eccentricity (N = {len(df_methods.dropna(subset='pl_orbeccen'))})')
+    g.ax_joint.set_ylim(0, 1.0)
+
+    g.ax_marg_x.set_title(f'Eccentricity vs. Semi-Major Axis and marginal distributions (N = {len(df_clean_orbsmax_orbeccen)})')
+    plt.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The graph displays, on the X axis, the density of the orbital semi-major axis and on the Y-axis, the density of the orbital eccentricity. Putting the 2 values on a bivariate KDE plot, we can see a correlation between the 2 parameters.
+
+    What this graphs gives us, for the density curve, is that the Transit discovery method targets mainly small, lower to 1 AU orbital semi-major axis and specifically around 0.05 AU. When, on the other side, the radial velocity method curve has 2 small bumps, one tiny bump around 0.06-0.1 AU and another, slightly bigger around 1-2 AU but has more repartition of data than the Transit discovery method.
+
+    For the orbital eccentricity density we can see that the transit method nearly has all its value near 0 ($e \equiv 0$) when radial velocity discovery method is targets slightly more eccentric orbits ($e \equiv 0.15$) and has more repartition of its data.
+
+    The second graph, that shows the correlation between the eccentricity and the semi-major axis tells us that the closest a planet is to its star, the more its orbit looks like a perfect circle, it's eccentricity is near 0. As the semi-major axis increases, exoplanets orbits are also impacted by other objects such as other exoplanets from the same solar system making eccentricity rise up to 0.85.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Finishing exoplanets parameters with the equilibrium temperature. This will have strong correlation with the star effective temperature parameter but could also hide some other information.
+    """)
+    return
+
+
+@app.cell
+def _(df_methods, plt, sns):
+    df_eqt = df_methods.dropna(subset=['pl_eqt'])
+
+    sns.kdeplot(df_eqt, x='pl_eqt', hue='discoverymethod', common_norm=False)
+    plt.title(f"Distribution of exoplanet equilibrium temperature (N = {len(df_eqt)})")
+    plt.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The graph shows that the radial velocity method tends to mainly target "low" temperature exoplanets, around 300° K with tiny bumps around 900° and 1200° K. And the Transit method shows only 2 distinct peaks around 750° K and 1500° K. Those 2 values standing out can maybe be linked to the exoplanets types that we discovered with exoplanets radii and masses.
+    """)
+    return
+
+
+@app.cell
+def _(df_methods, plt, sns):
+    df_clean_eqt_masse = df_methods.dropna(subset=['pl_eqt', 'pl_rade'])
+    sns.scatterplot(df_clean_eqt_masse, x='pl_eqt', y='pl_rade', alpha=0.1)
+    plt.title(f"Correlation between equilibrium temperature and radii (N = {len(df_clean_eqt_masse)})")
+    plt.xlabel(f"Equilibrium temperature [K]")
+    plt.ylabel(f"Radius [Earth Radius]")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Plotting the equilibrium temperatures along the exoplanets radius, we can see that the 2 exoplanets categories seems to also stand out, yet less distincitve but starting from a certiain radius, temperature seems to get bigger. We know that the radius nor mass has no direct impact on the equilibrium temperature but can reveals other correlation about density, composition of the exoplanets.
     """)
     return
 
