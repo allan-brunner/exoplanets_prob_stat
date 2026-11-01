@@ -20,7 +20,7 @@ def _(pd):
     # Load dataset
     df = pd.read_csv("exoplanetes_data.csv", skiprows=292, low_memory=False)
     BLUE, ORANGE, AQUA, YELLOW, GREY = "#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#8a8a85"
-    return BLUE, GREY, df
+    return BLUE, GREY, ORANGE, df
 
 
 @app.cell
@@ -66,20 +66,20 @@ def _(df):
     coverage_default_cols = _default_df[NUM_COLS].notna().mean()
 
     # DEF + filling coverage
-    df_full = _default_df.copy()
-    others_aligned = _others_df.reindex(df_full.index)
-    values_default = df_full[NUM_COLS]
+    df_filled = _default_df.copy()
+    others_aligned = _others_df.reindex(df_filled.index)
+    values_default = df_filled[NUM_COLS]
     values_filled = values_default.fillna(others_aligned)
-    df_full[NUM_COLS] = values_filled
-    df_full = df_full.reset_index()
+    df_filled[NUM_COLS] = values_filled
+    df_filled = df_filled.reset_index()
 
-    coverage_cols = df_full[NUM_COLS].notna().mean()
+    coverage_cols = df_filled[NUM_COLS].notna().mean()
     return (
         PLANET_COLS,
         STAR_COLS,
         coverage_cols,
         coverage_default_cols,
-        df_full,
+        df_filled,
     )
 
 
@@ -132,8 +132,8 @@ def _(mo):
 
 
 @app.cell
-def _(df_full):
-    df_full["pl_bmassprov"].value_counts()
+def _(df_filled):
+    df_filled["pl_bmassprov"].value_counts()
     return
 
 
@@ -148,12 +148,12 @@ def _(mo):
 
 
 @app.cell
-def _(STAR_COLS, df_full, plt, sns):
-    _counts = df_full["discoverymethod"].value_counts()
+def _(STAR_COLS, df_filled, plt, sns):
+    _counts = df_filled["discoverymethod"].value_counts()
     _methods = _counts[_counts >= 50].index.tolist()
 
     _miss = (
-        df_full[df_full["discoverymethod"].isin(_methods)]
+        df_filled[df_filled["discoverymethod"].isin(_methods)]
         .groupby("discoverymethod")[STAR_COLS]
         .apply(lambda g: g.isna().mean() * 100)
         .loc[_methods]
@@ -173,16 +173,16 @@ def _(STAR_COLS, df_full, plt, sns):
 
 
 @app.cell
-def _(BLUE, GREY, df_full, np, pd):
+def _(BLUE, GREY, df_filled, np, pd):
     # Giant planet: radius > 6 Earth radii and mass > 50 Earth masses.
-    df_full["is_gas_giant"] = np.where(
-        df_full["pl_rade"].notna(), df_full["pl_rade"] > 6,
-        np.where(df_full["pl_bmasse"].notna(), df_full["pl_bmasse"] > 50, np.nan),
+    df_filled["is_gas_giant"] = np.where(
+        df_filled["pl_rade"].notna(), df_filled["pl_rade"] > 6,
+        np.where(df_filled["pl_bmasse"].notna(), df_filled["pl_bmasse"] > 50, np.nan),
     )
 
     _cols = ["st_met", "st_age", "st_dens", "st_lum"]
 
-    _d = df_full.dropna(subset=["is_gas_giant"])
+    _d = df_filled.dropna(subset=["is_gas_giant"])
     _share = pd.DataFrame({
         "Value present": {c: _d.loc[_d[c].notna(), "is_gas_giant"].mean() * 100 for c in _cols},
         "Value missing": {c: _d.loc[_d[c].isna(), "is_gas_giant"].mean() * 100 for c in _cols},
@@ -223,8 +223,8 @@ def _(mo):
 
 
 @app.cell
-def _(PLANET_COLS, STAR_COLS, df_full, plt, sns):
-    _corr = df_full[STAR_COLS + PLANET_COLS].corr(method="spearman").loc[STAR_COLS, PLANET_COLS]
+def _(PLANET_COLS, STAR_COLS, df_filled, plt, sns):
+    _corr = df_filled[STAR_COLS + PLANET_COLS].corr(method="spearman").loc[STAR_COLS, PLANET_COLS]
 
     _fig, _ax = plt.subplots()
     sns.heatmap(_corr, annot=True, fmt=".2f", cmap=sns.diverging_palette(250, 25, as_cmap=True),
@@ -254,14 +254,14 @@ def _(mo):
 
 
 @app.cell
-def _(BLUE, df_full, np, plt):
+def _(BLUE, df_filled, np, plt):
     _fig, _axes = plt.subplots(1, 2, figsize=(11, 4.5))
 
 
     # RECOMPUTATION FROM THE STAR
     SUN_RADIUS_AU = 0.00465047
 
-    _m = df_full.dropna(subset=["pl_eqt", "st_teff", "st_rad", "pl_orbsmax"])
+    _m = df_filled.dropna(subset=["pl_eqt", "st_teff", "st_rad", "pl_orbsmax"])
     _teq = _m["st_teff"] * np.sqrt(_m["st_rad"] * SUN_RADIUS_AU / (2 * _m["pl_orbsmax"]))
     _axes[0].scatter(_teq, _m["pl_eqt"], s=6, alpha=0.3, color=BLUE)
     _axes[0].plot([0, 4500], [0, 4500], color="black", lw=1, ls="--")
@@ -273,7 +273,7 @@ def _(BLUE, df_full, np, plt):
     # RECOMPUTATION OF KEPLER 3rd law
     DAYS_PER_YEAR = 365.25
 
-    _m = df_full.dropna(subset=["pl_orbsmax", "st_mass", "pl_orbper"])
+    _m = df_filled.dropna(subset=["pl_orbsmax", "st_mass", "pl_orbper"])
     _a = (_m["st_mass"] * (_m["pl_orbper"] / DAYS_PER_YEAR) ** 2) ** (1 / 3)
     _axes[1].scatter(_a, _m["pl_orbsmax"], s=6, alpha=0.9, color=BLUE)
     _axes[1].plot([1e-3, 1e4], [1e-3, 1e4], color="black", lw=1, ls="--")
@@ -313,8 +313,8 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(STAR_COLS, df_full, plt, sns):
-    _corr = df_full[STAR_COLS].corr(method="spearman")
+def _(STAR_COLS, df_filled, plt, sns):
+    _corr = df_filled[STAR_COLS].corr(method="spearman")
 
     _fig, _ax = plt.subplots()
     sns.heatmap(_corr, annot=True, fmt=".2f", cmap=sns.diverging_palette(250, 25, as_cmap=True),
@@ -341,6 +341,51 @@ def _(mo):
     - A minimal feature set for our model is temperature, mass, radius, metallicity.
     - Gravity, Luminosity, Temperature by  the three formulas above can fill the holes of one column from the two others.
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # STEP 5 Model features
+
+    ## - 5.a Metalicity
+
+    Stars with more heavy elements = higher metallicity, host gas giants more often. As we can see in our data, among transit planets, 11% are gas giants with metal-poor stars, against 56% around the most metal-rich ones. The same trend appears despite the method, so it does not come from the detection method.
+
+    This isn't a surprise: astronomers already know that "stars with a higher metallicity are more likely to have planets, especially giant planets" ([Wikipedia: Planet-hosting star](https://en.wikipedia.org/wiki/Planet-hosting_star)). The core accretion model we described earlier explains why. A metal-rich star is born in a disk full of dust and rock, so a planet can build its 10 Earth-mass core faster and still have time to grab gas before the disk is gone.
+
+    We can conclude that `st_met` is one of the most useful columns for the model !
+    """)
+    return
+
+
+@app.cell
+def _(BLUE, ORANGE, df_filled, pd, plt):
+    _bins = [-1, -0.15, 0, 0.15, 0.3, 0.6]
+    _labels = ["< -0.15", "-0.15 to 0", "0 to 0.15", "0.15 to 0.3", "> 0.3"]
+
+    _fig, _ax = plt.subplots(figsize=(8, 4.5))
+    for _meth, _col in [("Transit", BLUE), ("Radial Velocity", ORANGE)]:
+        _m = df_filled[df_filled["discoverymethod"] == _meth].dropna(subset=["st_met", "is_gas_giant"])
+        _g = _m.groupby(pd.cut(_m["st_met"], _bins, labels=_labels), observed=True)["is_gas_giant"].agg(["mean", "size"])
+    
+        _ax.plot(range(len(_g)), _g["mean"] * 100, color=_col, marker="o", lw=2, label=_meth)
+        _ax.text(len(_g) - 0.9, _g["mean"].iloc[-1] * 100, _meth, color="black", va="center")
+
+    _ax.set_ylim(0, 100)
+    _ax.set_xlim(-0.3, len(_labels) + 0.4)
+
+    _ax.set_xticks(range(len(_labels)), _labels)
+    _ax.set_xlabel("Stellar metallicity [Fe/H] (dex)")
+    _ax.set_ylabel("Giant planets (%)")
+
+    _ax.spines[["top", "right"]].set_visible(False)
+    _ax.legend(frameon=False, loc="upper left")
+    _ax.set_title("Share of giants vs host star metallicity")
+
+    _fig.tight_layout()
+    _fig
     return
 
 
