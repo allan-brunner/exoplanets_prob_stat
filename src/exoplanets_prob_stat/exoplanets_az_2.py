@@ -210,5 +210,107 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Step 3 False lead
+
+    A naive approach is to look at which planet column correlates the most with the star. Spearman correlation is used instead of Pearson since nearly every variable spans several orders of magnitude.
+
+    [Correlation de spearman](https://fr.wikipedia.org/wiki/Corr%C3%A9lation_de_Spearman)
+    """)
+    return
+
+
+@app.cell
+def _(PLANET_COLS, STAR_COLS, df_full, plt, sns):
+    _corr = df_full[STAR_COLS + PLANET_COLS].corr(method="spearman").loc[STAR_COLS, PLANET_COLS]
+
+    _fig, _ax = plt.subplots()
+    sns.heatmap(_corr, annot=True, fmt=".2f", cmap=sns.diverging_palette(250, 25, as_cmap=True),
+                vmin=-0.6, vmax=0.6, cbar_kws={"label": "Spearman ρ"}, ax=_ax)
+
+    _ax.set_title("Planet columns (rows) vs star columns (columns)")
+
+    _fig.tight_layout()
+    _fig
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The equilibrium temperature `pl_eqt` and the insolation `pl_insol` are the planet columns that correlate the most with the star.
+
+    The temperature is compute with the following formula :
+
+    $$T_{eq} = T_{eff}\,\sqrt{\frac{R_\star}{2a}}\,(1-A)^{1/4}$$
+
+    As we can see it is built from the star temperature, the star radius and the semi-major axis.
+
+    The same applies to `pl_orbsmax`, which is usually derived from Kepler's third law $a^3 = M_\star P^2$. If this is true, the archive values must fall exactly on the recomputed ones.
+    """)
+    return
+
+
+@app.cell
+def _(BLUE, df_full, np, plt):
+    _fig, _axes = plt.subplots(1, 2, figsize=(11, 4.5))
+
+
+    # RECOMPUTATION FROM THE STAR
+    SUN_RADIUS_AU = 0.00465047
+
+    _m = df_full.dropna(subset=["pl_eqt", "st_teff", "st_rad", "pl_orbsmax"])
+    _teq = _m["st_teff"] * np.sqrt(_m["st_rad"] * SUN_RADIUS_AU / (2 * _m["pl_orbsmax"]))
+    _axes[0].scatter(_teq, _m["pl_eqt"], s=6, alpha=0.3, color=BLUE)
+    _axes[0].plot([0, 4500], [0, 4500], color="black", lw=1, ls="--")
+    _axes[0].set_xlabel("$T_{eq}$ recomputed from the star (K)")
+    _axes[0].set_ylabel("pl_eqt in the archive (K)")
+    _axes[0].set_title(f"Equilibrium temperature (N = {len(_m)})")
+
+
+    # RECOMPUTATION OF KEPLER 3rd law
+    DAYS_PER_YEAR = 365.25
+
+    _m = df_full.dropna(subset=["pl_orbsmax", "st_mass", "pl_orbper"])
+    _a = (_m["st_mass"] * (_m["pl_orbper"] / DAYS_PER_YEAR) ** 2) ** (1 / 3)
+    _axes[1].scatter(_a, _m["pl_orbsmax"], s=6, alpha=0.9, color=BLUE)
+    _axes[1].plot([1e-3, 1e4], [1e-3, 1e4], color="black", lw=1, ls="--")
+    _axes[1].set_xscale("log")
+    _axes[1].set_yscale("log")
+
+    _axes[1].set_xlabel("$a$ from Kepler's 3rd law (AU)")
+    _axes[1].set_ylabel("pl_orbsmax in the archive (AU)")
+    _axes[1].set_title(f"Semi-major axis (N = {len(_m)})")
+
+    for _ax in _axes:
+        _ax.spines[["top", "right"]].set_visible(False)
+    _fig.tight_layout()
+    _fig
+
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Conclusions:
+    - `pl_eqt` and `pl_insol` are not targets (not independent information about the planet) and not features.
+    - `pl_orbsmax` is equivalent to the orbital period once the stellar mass is known. Predicting both is redundant: predict the period, then compute $a$.
+    - When those values are undefined, we can precisly found these informations by recomputing them.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+ 
+    """)
+    return
+
+
 if __name__ == "__main__":
     app.run()
