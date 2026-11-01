@@ -307,7 +307,39 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
- 
+    # Step 4 Redundant stellar columns due to physic
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(STAR_COLS, df_full, plt, sns):
+    _corr = df_full[STAR_COLS].corr(method="spearman")
+
+    _fig, _ax = plt.subplots()
+    sns.heatmap(_corr, annot=True, fmt=".2f", cmap=sns.diverging_palette(250, 25, as_cmap=True),
+                vmin=-1, vmax=1, cbar_kws={"label": "Spearman ρ"}, ax=_ax)
+    _ax.set_title("Correlation between the stellar columns")
+
+    _fig.tight_layout()
+    _fig
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The first six columns form one block : temperature, radius, mass, luminosity, gravity and density are linked by physics. This is why the correlation between each of them is strong !
+
+    - $\log g = \log g_\odot + \log M_\star - 2 \log R_\star$ : [Surface gravity](https://en.wikipedia.org/wiki/Surface_gravity)
+    - $L_\star = R_\star^2 \, (T_{eff} / T_\odot)^4$ : [Stefan–Boltzmann law](https://en.wikipedia.org/wiki/Stefan%E2%80%93Boltzmann_law)
+    - $\rho_\star = \rho_\odot \, M_\star / R_\star^3$ : [Sun](https://en.wikipedia.org/wiki/Sun)
+
+    We also see that the metallicity and the age are nearly independent from this block, so they bring new information.
+
+    Conclusion :
+    - A minimal feature set for our model is temperature, mass, radius, metallicity.
+    - Gravity, Luminosity, Temperature by  the three formulas above can fill the holes of one column from the two others.
     """)
     return
 
