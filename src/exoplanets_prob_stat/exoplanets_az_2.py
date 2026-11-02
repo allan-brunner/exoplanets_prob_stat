@@ -289,7 +289,6 @@ def _(BLUE, df_filled, np, plt):
     _fig.tight_layout()
     _fig
 
-
     return
 
 
@@ -369,7 +368,7 @@ def _(BLUE, ORANGE, df_filled, pd, plt):
     for _meth, _col in [("Transit", BLUE), ("Radial Velocity", ORANGE)]:
         _m = df_filled[df_filled["discoverymethod"] == _meth].dropna(subset=["st_met", "is_gas_giant"])
         _g = _m.groupby(pd.cut(_m["st_met"], _bins, labels=_labels), observed=True)["is_gas_giant"].agg(["mean", "size"])
-    
+
         _ax.plot(range(len(_g)), _g["mean"] * 100, color=_col, marker="o", lw=2, label=_meth)
         _ax.text(len(_g) - 0.9, _g["mean"].iloc[-1] * 100, _meth, color="black", va="center")
 
@@ -386,6 +385,95 @@ def _(BLUE, ORANGE, df_filled, pd, plt):
 
     _fig.tight_layout()
     _fig
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## - 5.b Stellar radius
+
+    The more the radius of the star is bigger the more the planets arounds it are far far far away [Exoplanet orbital and physical parameters](https://en.wikipedia.org/wiki/Exoplanet_orbital_and_physical_parameters)
+
+    [Stellar Classification](https://en.wikipedia.org/wiki/Stellar_classification)
+    """)
+    return
+
+
+@app.cell
+def _(BLUE, ORANGE, df_filled, np, pd, plt):
+    _bins = [0, 0.7, 0.96, 1.15, 1.4, 1.8, 6.6, np.inf]
+    _labels = [
+        "≤ 0.7 (Classe M - Naines rouges)",
+        "0.7 to 0.96 (Classe K - Naines oranges)",
+        "0.96 to 1.15 (Classe G - Type Solaire)",
+        "1.15 to 1.4 (Classe F - Jaune-Blanc)",
+        "1.4 to 1.8 (Classe A - Étoiles Blanches)",
+        "1.8 to 6.6 (Classe B - Étoiles Bleues)",
+        "> 6.6 (Classe O ou Étoiles Géantes évoluées)"
+    ]
+
+    _fig, _ax = plt.subplots(figsize=(12, 6))
+    for _meth, _col in [("Transit", BLUE), ("Radial Velocity", ORANGE)]:
+        _m = df_filled[df_filled["discoverymethod"] == _meth].dropna(subset=["st_rad", "pl_orbper"])
+        _g = _m.groupby(pd.cut(_m["st_rad"], _bins, labels=_labels), observed=False)["pl_orbper"].mean()
+        _ax.plot(range(len(_g)), _g.values, color=_col, marker="o", lw=2, label=_meth)
+    
+        _last_val = _g.iloc[-1] if not np.isnan(_g.iloc[-1]) else _g.dropna().iloc[-1]
+        _ax.text(len(_g) - 0.9, _last_val, _meth, color="black", va="center")
+
+    _ax.set_xlim(-0.3, len(_labels) - 0.7)
+
+    _ax.set_xticks(range(len(_labels)))
+    _ax.set_xticklabels(_labels, rotation=30, ha="right")
+
+    _ax.set_xlabel("Stellar radii")
+    _ax.set_ylabel("Mean Orbital Period (days)")
+
+    _ax.spines[["top", "right"]].set_visible(False)
+    _ax.legend(frameon=False, loc="upper left")
+    _ax.set_title("Average Planetary Orbital Period by Stellar Type")
+
+    _fig.tight_layout()
+    _fig
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    We can conclude two things by seeing this graph.
+
+    The `discovery_method` can also be a feature of our model. Because here we can clearly see that the transit ones are really close to their star. Wich his indeed expected due to Transit probability equation :
+
+    $$P_{\text{transit}} \approx \frac{R_* + R_p}{a} \approx \frac{R_*}{a}$$
+
+    * $R_*$ est le rayon de l'étoile (`st_rad`)
+    * $R_p$ est le rayon de la planète (`pl_rade`)
+    * $a$ est le demi-grand axe / la distance à l'étoile (`orbsmax`)
+
+    The problem is `pl_orbsmax` increases much faster than star size, and that it is in the denominator. So the transit method can only detect planets that are extremely close to a star.
+
+    -----
+
+    The other problem is the fall observed for the radial velocity method, as a reminder this method use the doppler effect :
+
+    - One side of the star moves toward us (blueshift), and the other side moves away (redshift).
+    The spectrograph gets light from both sides at the same time, so the thin spectral lines become wide and blurry.
+    With blurry lines, we can’t measure the tiny shift caused by a planet.
+
+    -  When a star gets bigger, its surface gravity gets weaker, and its outer layers become thin gas. Hot bubbles of gas rise (blueshift) and cool bubbles sink (redshift).
+    This movement creates speed changes of about 50 to 100 m/s in the star itself.
+    Astronomers call this stellar jitter. It can hide the much smaller signal of a planet.
+
+
+    [Method of discovering exoplanets](https://en.wikipedia.org/wiki/Methods_of_detecting_exoplanets)
+
+    [Stellar rotation](https://en.wikipedia.org/wiki/Stellar_rotation)
+
+    [Solar granule](https://en.wikipedia.org/wiki/Solar_granule)
+    """)
     return
 
 
