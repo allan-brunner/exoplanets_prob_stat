@@ -643,5 +643,48 @@ def _(mo):
     return
 
 
+@app.cell
+def _(df_default):
+    EXOPLANET_COLS = ['pl_orbper', 'pl_masse', 'pl_rade', 'pl_orbeccen', 'pl_orbsmax', 'pl_eqt']
+    df_exoplanets_full = df_default.dropna(subset=EXOPLANET_COLS)
+    per_exoplanets = (len(df_exoplanets_full), len(df_default), len(df_exoplanets_full) / len(df_default) * 100)
+    print(f'Default flagged columns containing all the retained columns values: {per_exoplanets[0]} / {per_exoplanets[1]} ({per_exoplanets[2]:.2f}%)')
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    In summary, retained columns for exoplanets parameters are:
+    1. **Orbital period [days]:** `pl_orbper`
+    2. **Mass [Earth mass]:** `pl_masse`
+    3. **Radius [Earth radii]:** `pl_rade`
+    4. **Orbital eccentricity:** `pl_orbeccen`
+    5. **Orbital semi-major axis [AU]:** `pl_orbsmax`
+    6. **Equilibrium temperature [K]:** `pl_eqt`
+
+    Those 6 columns will be the expected output from the model hopefully if values can be seen correlating with host stars parameters. Taking in account only default flagged rows and non N/A rows for all the retained columns, there is 954 rows of all the 6566 total rows, a bit less than 15% of rows.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Stellar parameters
+
+    Having analyzed all meaningful exoplanets parameters for the project, that is a model to predict exoplanet and system's parameters from stellar ones, the stellar parameters comes next.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The first parameter is the star class. Each star has a classification based on color, chemical composition, luminosity and temperature. It works as a merger of those stat, maybe giving redundant information but still worth analyzing alongisde those specific variables.
+    """)
+    return
+
+
 if __name__ == "__main__":
     app.run()
