@@ -681,7 +681,44 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    The first parameter is the star class. Each star has a classification based on color, chemical composition, luminosity and temperature. It works as a merger of those stat, maybe giving redundant information but still worth analyzing alongisde those specific variables.
+    The first parameter is the star spectral type. Each star gets a classification mostly based on its temperature and luminosity for the Morgan-Keenan-Kellman (commonly MK) nomenclature. The star classification working allowing multiple class for incertitudes require a bit of pre-processing before working with the data uniformly.
+    """)
+    return
+
+
+@app.cell
+def _(df_default, plt, sns):
+    df_spectype = df_default.dropna(subset=['st_spectype']).copy()
+
+    # Split the spectral type by / or - and remove white space
+    df_spectype['st_spectype_list'] = df_spectype['st_spectype'].str.strip().str.split(r'\s*[/-]\s*')
+
+    # Explode the list to get 1 type per row
+    df_spectype = df_spectype.explode('st_spectype_list')
+
+    # Keep only the first letter, the main class letter
+    df_spectype['main_stellar_class'] = df_spectype['st_spectype_list'].str[0].str.upper()
+
+    # Filter out duplicated luminosity classes and possible artifacts
+    valid_classes = ['O', 'B', 'A', 'F', 'G', 'K', 'M']
+    df_clean_main_spec_class = df_spectype[df_spectype['main_stellar_class'].isin(valid_classes)]
+
+    sns.countplot(
+        df_clean_main_spec_class,
+        x='main_stellar_class',
+        order=valid_classes
+    )
+    plt.title(f'Distribution of host stars per spectral type main letter \n(N = {len(df_clean_main_spec_class)} for {len(df_spectype)} rows)')
+    plt.xlabel('Main class letters')
+    plt.ylabel('Count of exoplanets around stellar classes')
+    plt.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    We can see with this graph that exoplanets seems to orbit, or at least are discovered mostly around cooler stars. This graph only display the count for main class letters, it doesn't take in account the level nor the luminosity class.
     """)
     return
 
