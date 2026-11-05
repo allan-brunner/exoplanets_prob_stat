@@ -49,7 +49,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(df):
     # Define columns
     STAR_COLS = ["st_teff", "st_rad", "st_mass", "st_met", "st_logg", "st_age", "st_dens", "st_lum", "st_vsin", "st_rotp"]
@@ -225,13 +225,17 @@ def _(mo):
 
 @app.cell
 def _(PLANET_COLS, STAR_COLS, df_filled, plt, sns):
-    _corr = df_filled[STAR_COLS + PLANET_COLS].corr(method="spearman").loc[STAR_COLS, PLANET_COLS]
+    _fig, _axes = plt.subplots(1, 2, figsize=(14, 6), sharey=True)
+    for _ax, _meth in zip(_axes, ["Transit", "Radial Velocity"]):
+        _m = df_filled[df_filled["discoverymethod"] == _meth]
+        _corr = _m[STAR_COLS + PLANET_COLS].corr(method="spearman", min_periods=30).loc[STAR_COLS, PLANET_COLS]
 
-    _fig, _ax = plt.subplots()
-    sns.heatmap(_corr, annot=True, fmt=".2f", cmap=sns.diverging_palette(250, 25, as_cmap=True),
-                vmin=-0.6, vmax=0.6, cbar_kws={"label": "Spearman ρ"}, ax=_ax)
+        sns.heatmap(_corr, annot=True, fmt=".2f", cmap=sns.diverging_palette(250, 25, as_cmap=True),
+                    vmin=-0.6, vmax=0.6, cbar_kws={"label": "Spearman ρ"}, ax=_ax)
+    
+        _ax.set_title(f"{_meth} (N = {len(_m)})")
 
-    _ax.set_title("Planet columns (rows) vs star columns (columns)")
+    _fig.suptitle("Star columns (rows) vs planet columns (columns), by discovery method")
 
     _fig.tight_layout()
     _fig
@@ -241,9 +245,11 @@ def _(PLANET_COLS, STAR_COLS, df_filled, plt, sns):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    The equilibrium temperature `pl_eqt` and the insolation `pl_insol` are the planet columns that correlate the most with the star.
+    The correlations depend on the discovery method. With transit, the equilibrium temperature `pl_eqt` and the insolation `pl_insol` correlate the most with the star, just ahead of `pl_bmasse`. With radial velocity, it's the planet mass `pl_bmasse` that correlates the most, up to 0.67 with `st_lum`.
 
-    The temperature is compute with the following formula :
+    The orbit is also different between the two methods. `pl_orbper` and `pl_orbsmax` barely correlate with the star for transit planets, but they reach 0.44 and 0.51 with `st_lum` for radial velocity. The eccentricity `pl_orbeccen` stays weak with both methods, so it will be hard to guess from the star.
+
+    But `pl_eqt` and `pl_insol` are not real discoveries. The temperature is compute with the following formula :
 
     $$T_{eq} = T_{eff}\,\sqrt{\frac{R_\star}{2a}}\,(1-A)^{1/4}$$
 
@@ -330,15 +336,11 @@ def _(mo):
     mo.md(r"""
     The first six columns form one block : temperature, radius, mass, luminosity, gravity and density are linked by physics. This is why the correlation between each of them is strong !
 
-    - $\log g = \log g_\odot + \log M_\star - 2 \log R_\star$ : [Surface gravity](https://en.wikipedia.org/wiki/Surface_gravity)
-    - $L_\star = R_\star^2 \, (T_{eff} / T_\odot)^4$ : [Stefan–Boltzmann law](https://en.wikipedia.org/wiki/Stefan%E2%80%93Boltzmann_law)
-    - $\rho_\star = \rho_\odot \, M_\star / R_\star^3$ : [Sun](https://en.wikipedia.org/wiki/Sun)
+    The Wikipedia pages give the general formulas. We divide them by the Sun's values, so $M_\star$, $R_\star$ and $L_\star$ are in solar units:
 
-    We also see that the metallicity and the age are nearly independent from this block, so they bring new information.
-
-    Conclusion :
-    - A minimal feature set for our model is temperature, mass, radius, metallicity.
-    - Gravity, Luminosity, Temperature by  the three formulas above can fill the holes of one column from the two others.
+    - Gravity: from $g = GM/R^2$ we get $g / g_\odot = M_\star / R_\star^2$: [Surface gravity](https://en.wikipedia.org/wiki/Surface_gravity)
+    - Luminosity: $L_\star = R_\star^2 \, (T_{eff} / T_\odot)^4$ : [Stefan–Boltzmann law](https://en.wikipedia.org/wiki/Stefan%E2%80%93Boltzmann_law)
+    - Density: from $\rho = M / V$ with the volume of a sphere $V = \frac{4}{3}\pi R^3$, we get $\rho_\star = \rho_\odot \, M_\star / R_\star^3$ : [Density](https://en.wikipedia.org/wiki/Density), and [Sun](https://en.wikipedia.org/wiki/Sun) for the value of $\rho_\odot$
     """)
     return
 
@@ -448,9 +450,9 @@ def _(mo):
 
     $$P_{\text{transit}} \approx \frac{R_* + R_p}{a} \approx \frac{R_*}{a}$$
 
-    * $R_*$ est le rayon de l'étoile (`st_rad`)
-    * $R_p$ est le rayon de la planète (`pl_rade`)
-    * $a$ est le demi-grand axe / la distance à l'étoile (`orbsmax`)
+    * $R_*$ (`st_rad`)
+    * $R_p$ (`pl_rade`)
+    * $a$ (`orbsmax`)
 
     The problem is `pl_orbsmax` increases much faster than star size, and that it is in the denominator. So the transit method can only detect planets that are extremely close to a star.
 
@@ -501,7 +503,7 @@ def _(BLUE, ORANGE, df_filled, plt):
     for _meth, _col in [("Transit", BLUE), ("Radial Velocity", ORANGE)]:
         _m = df_filled[df_filled["discoverymethod"] == _meth].dropna(subset=["sy_pnum", "is_gas_giant"])
         _g = _m.groupby(_m["sy_pnum"].clip(upper=5))["is_gas_giant"].agg(["mean", "size"])
-    
+
         _ax.plot(range(len(_g)), _g["mean"] * 100, color=_col, marker="o", lw=2, label=_meth)
         _ax.text(len(_g) - 0.9, _g["mean"].iloc[-1] * 100, _meth, color="black", va="center")
 
@@ -515,6 +517,75 @@ def _(BLUE, ORANGE, df_filled, plt):
     _ax.spines[["top", "right"]].set_visible(False)
     _ax.legend(frameon=False, loc="upper right")
     _ax.set_title("Share of giants vs number of planets in the system")
+
+    _fig.tight_layout()
+    _fig
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## - 5.d Stellar mass
+
+    The bigger the star's mass, the bigger the mass of its planets. As we can see in our data, among transit planets, the median mass goes from 4 Earth masses around M stars (91 planets) to 458 Earth masses around A stars (121 planets). For radial velocity, it goes from 5 Earth masses (118 planets) to 779 Earth masses (127 planets). The same trend appears with both methods.
+
+    We don't use the B class to compare, because it only has 44 planets (8 with transit). Most of our planets with a known mass orbit G and F stars, so these two classes are the most reliable.
+
+    This isn't a surprise, astronomers see the same thing: "about 1 in 6 stars having twice the mass of the Sun are orbited by one or more Jupiter-sized planets", against "1 in 16 for Sun-like stars and only 1 in 50 for red dwarfs".
+
+    But we need to be careful with two things:
+
+    - A planet moves a massive star less, so it's harder to detect with radial velocity. Small planets around massive stars are often missed, which makes the trend look stronger than it is.
+    - Radial velocity usually gives only a minimum mass. In our data, 946 of the 1192 radial velocity planets are `Msini`.
+
+    We can conclude that `st_mass` is the best stellar column to guess `pl_bmasse`.
+
+    [Planet-hosting star](https://en.wikipedia.org/wiki/Planet-hosting_star)
+
+    [Stellar classification](https://en.wikipedia.org/wiki/Stellar_classification)
+
+    [Doppler spectroscopy](https://en.wikipedia.org/wiki/Doppler_spectroscopy)
+    """)
+    return
+
+
+@app.cell
+def _(BLUE, ORANGE, df_filled, np, pd, plt):
+    _bins = [0, 0.45, 0.8, 1.04, 1.4, 2.1, np.inf]
+    _labels = [
+        "< 0.45 (Classe M - Naines rouges)",
+        "0.45 to 0.8 (Classe K - Naines oranges)",
+        "0.8 to 1.04 (Classe G - Type Solaire)",
+        "1.04 to 1.4 (Classe F - Jaune-Blanc)",
+        "1.4 to 2.1 (Classe A - Étoiles Blanches)",
+        "> 2.1 (Classe B - Étoiles Bleues)"
+    ]
+
+    _fig, _ax = plt.subplots(figsize=(12, 6))
+    for _meth, _col in [("Transit", BLUE), ("Radial Velocity", ORANGE)]:
+        _m = df_filled[df_filled["discoverymethod"] == _meth].dropna(subset=["st_mass", "pl_bmasse"])
+        _g = _m.groupby(pd.cut(_m["st_mass"], _bins, labels=_labels), observed=False)["pl_bmasse"]
+        _med = _g.median()
+
+        print(_g.size())
+
+        _ax.plot(range(len(_med)), _med.values, color=_col, marker="o", lw=2, label=_meth)
+
+        _ax.text(len(_med) - 0.9, _med.iloc[-1], _meth, color="black", va="center")
+
+    _ax.set_yscale("log")
+    _ax.set_xlim(-0.3, len(_labels) - 0.7)
+
+    _ax.set_xticks(range(len(_labels)))
+    _ax.set_xticklabels(_labels, rotation=30, ha="right")
+
+    _ax.set_xlabel("Stellar mass")
+    _ax.set_ylabel("Median Planet Mass (Earth masses, log scale)")
+
+    _ax.spines[["top", "right"]].set_visible(False)
+    _ax.legend(frameon=False, loc="upper left")
+    _ax.set_title("Median Planet Mass by Stellar Type")
 
     _fig.tight_layout()
     _fig
