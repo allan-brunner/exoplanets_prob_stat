@@ -56,6 +56,7 @@ def _(df):
     SYSTEM_COLS = ["sy_dist", "sy_vmag", "sy_kmag", "sy_gaiamag", "sy_snum", "sy_pnum"]
     PLANET_COLS = ["pl_rade", "pl_bmasse", "pl_orbper", "pl_orbsmax", "pl_orbeccen", "pl_eqt", "pl_insol", "pl_dens"]
     NUM_COLS = STAR_COLS + SYSTEM_COLS + PLANET_COLS
+
     print(f"{df.shape[1]} columns in total. {len(STAR_COLS)} are stars, {len(PLANET_COLS)} are planets, {len(SYSTEM_COLS)} are system ones") 
 
     _default_df = df[df["default_flag"] == 1].set_index("pl_name")
@@ -288,7 +289,6 @@ def _(BLUE, df_filled, np, plt):
         _ax.spines[["top", "right"]].set_visible(False)
     _fig.tight_layout()
     _fig
-
     return
 
 
@@ -418,7 +418,7 @@ def _(BLUE, ORANGE, df_filled, np, pd, plt):
         _m = df_filled[df_filled["discoverymethod"] == _meth].dropna(subset=["st_rad", "pl_orbper"])
         _g = _m.groupby(pd.cut(_m["st_rad"], _bins, labels=_labels), observed=False)["pl_orbper"].mean()
         _ax.plot(range(len(_g)), _g.values, color=_col, marker="o", lw=2, label=_meth)
-    
+
         _last_val = _g.iloc[-1] if not np.isnan(_g.iloc[-1]) else _g.dropna().iloc[-1]
         _ax.text(len(_g) - 0.9, _last_val, _meth, color="black", va="center")
 
@@ -436,7 +436,6 @@ def _(BLUE, ORANGE, df_filled, np, pd, plt):
 
     _fig.tight_layout()
     _fig
-
     return
 
 
@@ -474,6 +473,51 @@ def _(mo):
 
     [Solar granule](https://en.wikipedia.org/wiki/Solar_granule)
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## - 5.c Number of planets in the system
+
+    The more planets a system has, the less likely each of them is to be a gas giant. The same trend appears with both methods, and the two curves are clearly separated, so `discoverymethod` is still needed alongside this feature.
+
+    This matches what is known about system architecture: "Packing refers to the tendency of smaller planets to be closer together, and of larger planets to have larger orbital spacing" ([Wikipedia: Planetary system](https://en.wikipedia.org/wiki/Planetary_system)). Small planets can fit into compact systems, while giants need more room.
+
+    Limits:
+    - `sy_pnum` is not a stellar property, it is only known once the system has been observed.
+    - It counts the known planets, so a "single" planet may have undetected neighbours.
+    - It includes the planet we are predicting, so the train/test split must be done by `hostname`.
+    """)
+    return
+
+
+@app.cell
+def _(BLUE, ORANGE, df_filled, plt):
+    _labels = ["1", "2", "3", "4", "5+"]
+
+    _fig, _ax = plt.subplots(figsize=(8, 4.5))
+    for _meth, _col in [("Transit", BLUE), ("Radial Velocity", ORANGE)]:
+        _m = df_filled[df_filled["discoverymethod"] == _meth].dropna(subset=["sy_pnum", "is_gas_giant"])
+        _g = _m.groupby(_m["sy_pnum"].clip(upper=5))["is_gas_giant"].agg(["mean", "size"])
+    
+        _ax.plot(range(len(_g)), _g["mean"] * 100, color=_col, marker="o", lw=2, label=_meth)
+        _ax.text(len(_g) - 0.9, _g["mean"].iloc[-1] * 100, _meth, color="black", va="center")
+
+    _ax.set_ylim(0, 100)
+    _ax.set_xlim(-0.3, len(_labels) + 0.4)
+
+    _ax.set_xticks(range(len(_labels)), _labels)
+    _ax.set_xlabel("Number of known planets in the system (sy_pnum)")
+    _ax.set_ylabel("Giant planets (%)")
+
+    _ax.spines[["top", "right"]].set_visible(False)
+    _ax.legend(frameon=False, loc="upper right")
+    _ax.set_title("Share of giants vs number of planets in the system")
+
+    _fig.tight_layout()
+    _fig
     return
 
 
