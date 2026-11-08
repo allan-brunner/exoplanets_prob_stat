@@ -735,14 +735,14 @@ def _(df_default, plt, re, sns):
     def extract_detailed_luminosity(st_type):
         if not isinstance(st_type, str):
             return None
-    
+
         s = st_type.strip()
-    
+
         if s.startswith('D'):
             return 'VII / D'
         if s.startswith('sd'):
             return 'VI / sd'
-        
+    
         match = re.search(r'(Ia\+|Iab|Ia|Ib|III|II|IV|VII|VI|V)', s)
         if match:
             lum = match.group(1)
@@ -753,7 +753,7 @@ def _(df_default, plt, re, sns):
             if lum == 'VII':
                 return 'VII / D'
             return lum
-        
+    
         if re.search(r'(?:\s|-)0[a-z]*$', s):
             return '0 / Ia+'
 
@@ -792,6 +792,42 @@ def _(df_default, plt, re, sns):
 def _(mo):
     mo.md(r"""
     We can see, on the luminosity side that there is way less distribution, most stars are on the main sequence, the `V` bin and none on the 0 / Ia+ to Ib stars.
+    """)
+    return
+
+
+@app.cell
+def _(df_default, plt, sns):
+    df_mass = df_default.dropna(subset=['st_mass'])
+
+    sns.histplot(df_mass, x='st_mass', bins=20, log_scale=True)
+    plt.title(f'Repartition of host stars masses (N = {len(df_mass)} / {len(df_default)})')
+    plt.xlabel('Stellar masses Log[Solar mass]')
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    We can see that the repartition isn't that sparse. Most star are roughly the same size as our sun and there are none above 10 solar masses.
+    """)
+    return
+
+
+@app.cell
+def _(df_default, plt, sns):
+    df_radius = df_default.dropna(subset=['st_rad'])
+
+    sns.histplot(df_radius, x='st_rad', bins=20, log_scale=True)
+    plt.title(f'Repartition of host stars radii (N = {len(df_radius)} / {len(df_default)})')
+    plt.xlabel('Stellar masses Log[Solar radius]')
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    On the stellar radii, on the other hand, we can see that the values goes higher up to 100 times our sun's radius. Most of the star's radii still are around the same size as our sun's.
     """)
     return
 
