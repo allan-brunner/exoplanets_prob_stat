@@ -29,8 +29,9 @@ def _():
     import seaborn as sns
     import numpy as np
     import matplotlib.pyplot as plt
+    import re
 
-    return mo, pd, plt, sns
+    return mo, pd, plt, re, sns
 
 
 @app.cell
@@ -710,7 +711,7 @@ def _(df_default, plt, sns):
     )
     plt.title(f'Distribution of host stars per spectral type main letter \n(N = {len(df_clean_main_spec_class)} for {len(df_spectype)} rows)')
     plt.xlabel('Main class letters')
-    plt.ylabel('Count of exoplanets around stellar classes')
+    plt.ylabel('Count of exoplanets around stellar temperature classes')
     plt.show()
     return
 
@@ -718,7 +719,79 @@ def _(df_default, plt, sns):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    We can see with this graph that exoplanets seems to orbit, or at least are discovered mostly around cooler stars. This graph only display the count for main class letters, it doesn't take in account the level nor the luminosity class.
+    We can see with this graph that exoplanets seems to orbit, or at least are discovered mostly around cooler stars. This graph only display the count for main class letters, it doesn't take in account the level nor the luminosity class. To have a grasp for luminosity classes distribution we need to do the similar work:
+    """)
+    return
+
+
+@app.cell
+def _(df_default, plt, re, sns):
+    df_lum = df_default.dropna(subset=['st_spectype']).copy()
+
+    df_lum['st_spectype_list'] = df_lum['st_spectype'].str.strip().str.split(r'\s*[/-]\s*')
+
+    df_lum = df_lum.explode('st_spectype_list')
+
+    def extract_detailed_luminosity(st_type):
+        if not isinstance(st_type, str):
+            return None
+    
+        s = st_type.strip()
+    
+        if s.startswith('D'):
+            return 'VII / D'
+        if s.startswith('sd'):
+            return 'VI / sd'
+        
+        match = re.search(r'(Ia\+|Iab|Ia|Ib|III|II|IV|VII|VI|V)', s)
+        if match:
+            lum = match.group(1)
+            if lum == 'Ia+':
+                return '0 / Ia+'
+            if lum == 'VI':
+                return 'VI / sd'
+            if lum == 'VII':
+                return 'VII / D'
+            return lum
+        
+        if re.search(r'(?:\s|-)0[a-z]*$', s):
+            return '0 / Ia+'
+
+        return None
+
+    df_lum['luminosity_class'] = df_lum['st_spectype_list'].apply(extract_detailed_luminosity)
+
+    table_order = [
+        '0 / Ia+',
+        'Ia',
+        'Iab',
+        'Ib',
+        'II',
+        'III',
+        'IV',
+        'V',
+        'VI / sd',
+        'VII / D'
+    ]
+    df_clean_lum_class = df_lum.dropna(subset=['luminosity_class'])
+
+    sns.countplot(
+        data=df_clean_lum_class,
+        x='luminosity_class',
+        order=table_order,
+    )
+
+    plt.title(f'Distribution of host stars per Detailed Luminosity Class \n(N = {len(df_clean_lum_class)} for {len(df_lum)} rows)')
+    plt.xlabel('Luminosity Class')
+    plt.ylabel('Count of exoplanets around stellar luminosty classes')
+    plt.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    We can see, on the luminosity side that there is way less distribution, most stars are on the main sequence, the `V` bin and none on the 0 / Ia+ to Ib stars.
     """)
     return
 
