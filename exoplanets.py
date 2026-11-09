@@ -742,7 +742,7 @@ def _(df_default, plt, re, sns):
             return 'VII / D'
         if s.startswith('sd'):
             return 'VI / sd'
-    
+
         match = re.search(r'(Ia\+|Iab|Ia|Ib|III|II|IV|VII|VI|V)', s)
         if match:
             lum = match.group(1)
@@ -753,7 +753,7 @@ def _(df_default, plt, re, sns):
             if lum == 'VII':
                 return 'VII / D'
             return lum
-    
+
         if re.search(r'(?:\s|-)0[a-z]*$', s):
             return '0 / Ia+'
 
@@ -828,6 +828,38 @@ def _(df_default, plt, sns):
 def _(mo):
     mo.md(r"""
     On the stellar radii, on the other hand, we can see that the values goes higher up to 100 times our sun's radius. Most of the star's radii still are around the same size as our sun's.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Next an information worth knowing is the metallicity of the star. It can have an impact on the composition of the exoplanets, thus having a impact on the planet formation.
+    """)
+    return
+
+
+@app.cell
+def _(df_default, plt, sns):
+    df_metallicity = df_default.dropna(subset=['st_met'])
+
+    sns.histplot(df_metallicity, x='st_met')
+    plt.title(f'Repartition of stellar metallicities (N = {len(df_metallicity)} / {len(df_default)})')
+    plt.xlabel('Stellar metallicities [dex]')
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    First, before understanding this graph it is worth knowing how the values are calculated. The dex value represent if the given star is more ($>0$) metal-rich than our sun or less ($<0$). The value is computed by the following formula:
+    $$
+    \left[\frac{Fe}{H}\right] = \log_{10}\left( \frac{N_{Fe}}{N_H} \right)_\star - \log_{10}\left( \frac{N_{Fe}}{N_H} \right)_\odot
+    $$
+    $N_{Fe}$ and $N_H$ refers to the number of iron ($Fe$) and hydrogen ($H$) atoms per unit of volume respectively. $\star$ represent the given host star and $\odot$ represent our sun.
+
+    With this information, this graph tells us that there is a symmetrical variation around our sun's metallicity with still most of the star having roughly the same metallicity as our sun's.
     """)
     return
 
